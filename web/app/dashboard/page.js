@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import DashboardTable from "./DashboardTable";
 
 const Dashboard = () => {
+  const [bearerToken, setBearerToken] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    const access_token = localStorage.getItem("access_token");
-
-    if (!access_token) {
+    const accessToken = localStorage.getItem("access_token");
+    setBearerToken(accessToken);
+    if (!accessToken) {
       router.push("/login");
     }
   }, [router]);
@@ -22,7 +24,7 @@ const Dashboard = () => {
           <div>
             <a
               href="/dashboard"
-              className="mr-4 px-4 py-2 rounded hover:bg-primary align-middle"
+              className="mr-4 px-4 py-2 font-bold rounded hover:bg-primary align-middle"
             >
               Home
             </a>
@@ -49,7 +51,7 @@ const Dashboard = () => {
         </div>
       </nav>
       <main className="bg-gray-100 flex-grow p-6">
-        <p>Hello world!</p>
+        <DashboardTable bearerToken={bearerToken} />
       </main>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "../constants";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -13,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("http://0.0.0.0:8000/api/login", {
+    const res = await fetch(`${API_BASE_URL}/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,7 +28,7 @@ export default function Login() {
       localStorage.setItem("access_token", data.access_token);
       router.push("/");
     } else {
-      alert(data.detail);
+      setError(data.detail);
     }
   };
 
@@ -38,7 +39,7 @@ export default function Login() {
         className="bg-white p-6 rounded-lg shadow-lg"
       >
         <h1 className="text-2xl font-bold mb-4">Login</h1>
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <input
           type="text"
           placeholder="Username"

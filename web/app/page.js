@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "./constants";
 
 export default function Home() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function Home() {
       return;
     }
 
-    fetch("http://0.0.0.0:8000/api/ping", {
+    fetch(`${API_BASE_URL}/api/ping`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${access_token}`,

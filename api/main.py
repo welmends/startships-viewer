@@ -57,9 +57,9 @@ def ping(Authorize: AuthJWT = Depends()):
     return 'pong', 200
 
 @app.get("/api/starships")
-def get_starships(Authorize: AuthJWT = Depends()):
+def get_starships(page: int = 1, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
-    response = httpx.get("https://swapi.dev/api/starships/")
+    response = httpx.get(f"https://swapi.dev/api/starships/?page={page}")
     return response.json()
 
 # Function to modify OpenAPI schema to include the security scheme
