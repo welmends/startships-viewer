@@ -93,58 +93,69 @@ const DashboardTable = ({ bearerToken }) => {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex justify-end items-center mb-4">
-        <select id="filter" className="select select-bordered w-full max-w-xs">
-          <option value="">All</option>
-          <option value="category1">Category 1</option>
-          <option value="category2">Category 2</option>
-          <option value="category3">Category 3</option>
-        </select>
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      ) : (
+        <div>
+          <div className="flex justify-end items-center mb-4">
+            <select
+              id="filter"
+              className="select select-bordered w-full max-w-xs"
+            >
+              <option value="">All</option>
+              <option value="category1">Category 1</option>
+              <option value="category2">Category 2</option>
+              <option value="category3">Category 3</option>
+            </select>
+          </div>
 
-      <table className="table min-w-full divide-y">
-        <thead>
-          <tr>
-            <th>#</th>
-            {Object.values(STARSHIP_ATTRS).map((name, index) => (
-              <th key={index}>{name}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          {data &&
-            data.results &&
-            data.results.map((startship, index_row) => (
-              <tr key={index_row}>
-                <th>{(page - 1) * ROWS_PER_PAGE + (index_row + 1)}</th>
-                {Object.keys(STARSHIP_ATTRS).map((name, index_elem) => (
-                  <td key={index_elem}>{startship[name] || "-"}</td>
+          <table className="table min-w-full divide-y">
+            <thead>
+              <tr>
+                <th>#</th>
+                {Object.values(STARSHIP_ATTRS).map((name, index) => (
+                  <th key={index}>{name}</th>
                 ))}
               </tr>
-            ))}
-        </tbody>
-      </table>
+            </thead>
+            <tbody id="table-body">
+              {data &&
+                data.results &&
+                data.results.map((startship, index_row) => (
+                  <tr key={index_row}>
+                    <th>{(page - 1) * ROWS_PER_PAGE + (index_row + 1)}</th>
+                    {Object.keys(STARSHIP_ATTRS).map((name, index_elem) => (
+                      <td key={index_elem}>{startship[name] || "-"}</td>
+                    ))}
+                  </tr>
+                ))}
+            </tbody>
+          </table>
 
-      <div className="flex justify-end items-center mt-4">
-        <div className="pagination">
-          <button
-            id="prev-page"
-            className="btn btn-secondary"
-            onClick={handlePrevious}
-            disabled={data && data.previous === null}
-          >
-            Previous
-          </button>
-          <button
-            id="next-page"
-            className="btn btn-secondary ml-2"
-            onClick={handleNext}
-            disabled={data && data.next === null}
-          >
-            Next
-          </button>
+          <div className="flex justify-end items-center mt-4">
+            <div className="pagination">
+              <button
+                id="prev-page"
+                className="btn btn-secondary"
+                onClick={handlePrevious}
+                disabled={data && data.previous === null}
+              >
+                Previous
+              </button>
+              <button
+                id="next-page"
+                className="btn btn-secondary ml-2"
+                onClick={handleNext}
+                disabled={data && data.next === null}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
       <ToastContainer />
     </div>
   );
