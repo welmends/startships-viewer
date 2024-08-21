@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - redis
+      - mongo
+    volumes:
+      - ./api:/app
+
+  web:
+    build:
+      context: ./web
+    ports:
+      - "3000:3000"
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  celery_worker:
+    build:
+      context: ./api
+    command: celery -A celery_app worker --loglevel=info
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - api
+      - redis
+      - mongo
+    volumes:
+      - ./api:/app
+
+  celery_beat:
+    build:
+      context: ./api
+    command: celery -A celery_app beat --loglevel=info
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - api
+      - redis
+      - mongo
+    volumes:
+      - ./api:/app

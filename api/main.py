@@ -5,18 +5,19 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from pydantic import BaseModel
 import bcrypt
 import httpx
+import logging
 
-DEFAULT_SECRET_KEY = "default_secret_key"
-STORED_USERS = [
-    {
-        "id": 1,
-        "username": "admin",
-        "password": bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()),
-    }
-]
+from db import seed_database, async_db
+from constants import STORED_USERS
+from models import Settings, User
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
@@ -33,9 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Settings(BaseModel):
-    AUTHJWT_SECRET_KEY: str = DEFAULT_SECRET_KEY
-    authjwt_access_token_expires: int = 3600 # 1 hour
 
 @AuthJWT.load_config
 def get_config():
@@ -53,9 +51,11 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         content={"detail": exc.message}
     )
 
-class User(BaseModel):
-    username: str
-    password: str
+
+@app.on_event("startup")
+async def on_startup():
+    await seed_database()
+
 
 @app.post("/api/login")
 async def login(user: User, Authorize: AuthJWT = Depends()):
