@@ -20,7 +20,7 @@ const Dashboard = () => {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <nav className="bg-secondary p-4 text-base-content">
         <div className="mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Starships App</h1>
+          <h1 className="text-xl font-bold">Starships Viewer</h1>
           <div>
             <a
               href="/dashboard"

@@ -4,7 +4,7 @@ import "../styles/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Starships App",
+  title: "Starships Viewer",
   description: "View and filter Starships by manufacturer",
 };
 

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { API_BASE_URL } from "../constants";
 
 const ROWS_PER_PAGE = 10;
@@ -8,7 +11,7 @@ const STARSHIP_ATTRS = {
   name: "Name",
   model: "Model",
   starship_class: "Class",
-  manufacturer: "Manufacturers",
+  manufacturer: "Manufacturer",
   cost_in_credits: "Cost (in credits)",
   length: "Length (meters)",
   crew: "Crew",
@@ -21,22 +24,58 @@ const STARSHIP_ATTRS = {
 };
 
 const DashboardTable = ({ bearerToken }) => {
+  const router = useRouter();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
+  const [selectedfilter, setSelectedFilter] = useState("ALL");
   const [filter, setFilter] = useState("ALL");
 
   useEffect(() => {
     if (bearerToken) {
-      fetch(`${API_BASE_URL}/api/starships/?page=${page}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${bearerToken}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => setData(data));
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/api/starships?page=${page}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${bearerToken}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              setData(null);
+              setError(response.statusText);
+              router.push("/login");
+              return;
+            }
+          }
+
+          const data = await response.json();
+          setData(data);
+          setError(null);
+        } catch (error) {
+          setData(null);
+          setError(error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
     }
-  }, [bearerToken, page, filter]);
+  }, [bearerToken, page, selectedfilter]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(`Error: ${error}`);
+    }
+  }, [error]);
 
   const handlePrevious = (event) => {
     event.preventDefault();
@@ -106,6 +145,7 @@ const DashboardTable = ({ bearerToken }) => {
           </button>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };
