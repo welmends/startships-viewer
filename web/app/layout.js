@@ -5,7 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Starships Viewer",
-  description: "View and filter Starships by manufacturer",
+  description: "View and filter Star Wars Starships by manufacturer",
 };
 
 export default function RootLayout({ children }) {

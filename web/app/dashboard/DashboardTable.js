@@ -27,49 +27,10 @@ const DashboardTable = ({ bearerToken }) => {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
-  const [selectedfilter, setSelectedFilter] = useState("ALL");
-  const [filter, setFilter] = useState("ALL");
-
-  useEffect(() => {
-    if (bearerToken) {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/api/starships?page=${page}`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${bearerToken}`,
-              },
-            }
-          );
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              setData(null);
-              setError(response.statusText);
-              router.push("/login");
-              return;
-            }
-          }
-
-          const data = await response.json();
-          setData(data);
-          setError(null);
-        } catch (error) {
-          setData(null);
-          setError(error.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchData();
-    }
-  }, [bearerToken, page, selectedfilter]);
+  const [starshipsResponse, setStarshipsResponse] = useState(null);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [selectedManufacturer, setSelectedManufacturer] = useState(undefined);
 
   useEffect(() => {
     if (error) {
@@ -77,16 +38,102 @@ const DashboardTable = ({ bearerToken }) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (bearerToken) {
+      let request_url = `${API_BASE_URL}/api/starships?page_size=${ROWS_PER_PAGE}&page=${page}`;
+      if (selectedManufacturer !== undefined) {
+        request_url += `&manufacturer=${selectedManufacturer}`;
+      }
+
+      const fetchStarships = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(request_url, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              setStarshipsResponse(null);
+              setError(response.statusText);
+              router.push("/login");
+              return;
+            }
+          }
+
+          const starships = await response.json();
+          setStarshipsResponse(starships);
+          setError(null);
+        } catch (error) {
+          setStarshipsResponse(null);
+          setError(error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchStarships();
+    }
+  }, [bearerToken, page, selectedManufacturer]);
+
+  useEffect(() => {
+    if (bearerToken) {
+      const fetchManufacturers = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/manufacturers`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${bearerToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              setManufacturers(null);
+              setError(response.statusText);
+              router.push("/login");
+              return;
+            }
+          }
+
+          const manufacturers = await response.json();
+          console.log(manufacturers);
+          setManufacturers(manufacturers);
+          setError(null);
+        } catch (error) {
+          setManufacturers(null);
+          setError(error.message);
+        } finally {
+          // should we add a different loading?
+        }
+      };
+
+      fetchManufacturers();
+    }
+  }, [bearerToken]);
+
+  const handleSelectedManufacturer = (event) => {
+    event.preventDefault();
+    if (event.target.value === "All") {
+      setSelectedManufacturer(undefined);
+    } else {
+      setSelectedManufacturer(event.target.value);
+    }
+  };
+
   const handlePrevious = (event) => {
     event.preventDefault();
-    if (data && data.previous) {
+    if (starshipsResponse && starshipsResponse.previous) {
       setPage(page - 1);
     }
   };
 
   const handleNext = (event) => {
     event.preventDefault();
-    if (data && data.next) {
+    if (starshipsResponse && starshipsResponse.next) {
       setPage(page + 1);
     }
   };
@@ -101,13 +148,19 @@ const DashboardTable = ({ bearerToken }) => {
         <div>
           <div className="flex justify-end items-center mb-4">
             <select
-              id="filter"
+              id="selectedManufacturer"
+              value={selectedManufacturer}
               className="select select-bordered w-full max-w-xs"
+              onChange={handleSelectedManufacturer}
             >
-              <option value="">All</option>
-              <option value="category1">Category 1</option>
-              <option value="category2">Category 2</option>
-              <option value="category3">Category 3</option>
+              <option value="All">All</option>
+              {manufacturers &&
+                manufacturers.results &&
+                manufacturers.results.map((manufacturer, index) => (
+                  <option key={index} value={manufacturer}>
+                    {manufacturer}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -121,9 +174,9 @@ const DashboardTable = ({ bearerToken }) => {
               </tr>
             </thead>
             <tbody id="table-body">
-              {data &&
-                data.results &&
-                data.results.map((startship, index_row) => (
+              {starshipsResponse &&
+                starshipsResponse.results &&
+                starshipsResponse.results.map((startship, index_row) => (
                   <tr key={index_row}>
                     <th>{(page - 1) * ROWS_PER_PAGE + (index_row + 1)}</th>
                     {Object.keys(STARSHIP_ATTRS).map((name, index_elem) => (
@@ -140,7 +193,9 @@ const DashboardTable = ({ bearerToken }) => {
                 id="prev-page"
                 className="btn btn-secondary"
                 onClick={handlePrevious}
-                disabled={data && data.previous === null}
+                disabled={
+                  starshipsResponse && starshipsResponse.previous === null
+                }
               >
                 Previous
               </button>
@@ -148,7 +203,7 @@ const DashboardTable = ({ bearerToken }) => {
                 id="next-page"
                 className="btn btn-secondary ml-2"
                 onClick={handleNext}
-                disabled={data && data.next === null}
+                disabled={starshipsResponse && starshipsResponse.next === null}
               >
                 Next
               </button>

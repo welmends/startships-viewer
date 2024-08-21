@@ -75,14 +75,54 @@ async def ping(Authorize: AuthJWT = Depends()):
         raise e
 
 @app.get("/api/starships")
-async def get_starships(page: int = 1, Authorize: AuthJWT = Depends()):
+async def get_starships(page: int = 1, page_size: int = 10, manufacturer: str = None, Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        response = httpx.get(f"https://swapi.dev/api/starships/?page={page}")
-        return response.json()
+        if page < 1 or page_size < 1:
+            raise HTTPException(status_code=400, detail="page and page_size must be a positive integer not equal to zero")
+
+        results, page_previous, page_next = [], -1, None
+        while True:
+            response = httpx.get(f"https://swapi.dev/api/starships/?page={page}")
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail="Unknown error")
+            data = response.json()
+            if page_previous == -1:
+                page_previous = data.get('previous')
+            page_next = data.get('next')
+            if data.get('results') == None or data.get('next') == None:
+                break
+            res_results = data.get('results')
+            if manufacturer:
+                res_results = [row for row in res_results if manufacturer in row.get('manufacturer')]
+            results += res_results[:page_size-len(results)]
+            if len(results) == page_size:
+                break
+            page += 1
+        return JSONResponse(
+            status_code=200,
+            content={
+                "next": page_next,
+                "previous": page_previous,
+                "results": results
+            }
+        )
     except Exception as e:
         raise e
 
+@app.get("/api/manufacturers")
+async def get_all_manufacturers(Authorize: AuthJWT = Depends()):
+    try:
+        Authorize.jwt_required()
+        # TODO: I have to create a async task to update other database to give this fresh information
+        manufacturers = ['Corellian Engineering Corporation', 'Kuat Drive Yards', 'Sienar Fleet Systems', 'Cyngus Spaceworks']
+        return JSONResponse(
+            status_code=200,
+            content={"results": manufacturers}
+        )
+    except Exception as e:
+        raise e
+    
 # Function to modify OpenAPI schema to include the security scheme
 def custom_openapi():
     if app.openapi_schema:
