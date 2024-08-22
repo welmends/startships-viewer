@@ -1,12 +1,13 @@
-from celery import Celery
-from celery.schedules import crontab
-from celery.signals import worker_ready
 import logging
-import httpx
 
+import httpx
 from app.constants import SWAPI_STARSHIPS_BASE_URL
 from app.db import sync_db
 from app.models import Starship
+from celery import Celery
+from celery.schedules import crontab
+from celery.signals import worker_ready
+from pydantic import ValidationError
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -72,6 +73,15 @@ def consume_swapi():
             - {"status": "failed"} if there was an error during the HTTP request.
             - {"status": "exception"} if there was an unhandled error during the HTTP request.
     """
+
+    def validate_starship(data):
+        """Validate starship data using the Starship model."""
+        try:
+            return Starship(**data)
+        except ValidationError as e:
+            logger.warning(f"Validation error: {e}")
+            return None
+
     try:
         logger.info("Start consuming swapi..")
         doc = sync_db.search.find_one({"search": "page"})
@@ -90,11 +100,16 @@ def consume_swapi():
             valid_data, uids, manufacturers = [], set(), set()
             for item in results:
                 filtered_item = {key: item.get(key, "unknown") for key in model_fields}
-                uid = int(item.get("url").split("/")[-2])
-                uids.add(uid)
-                filtered_item["uid"] = uid
-                valid_data.append(filtered_item)
-                manufacturers.update(parse_manufacturers(filtered_item["manufacturer"]))
+                validated_item = validate_starship(filtered_item)
+
+                if validated_item:
+                    uid = int(item.get("url").split("/")[-2])
+                    uids.add(uid)
+                    filtered_item["uid"] = uid
+                    valid_data.append(filtered_item)
+                    manufacturers.update(
+                        parse_manufacturers(filtered_item["manufacturer"])
+                    )
 
             # Check if any uid already exists in the database
             existing_uids = sync_db.starships.find(
