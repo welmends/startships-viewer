@@ -1,18 +1,15 @@
-# Starships Viewer
-
 **Starships Viewer** is an application developed with FastAPI and Next.js that allows you to view information about Star Wars starships and manufacturers based on https://swapi.dev. The application provides endpoints for authentication and data queries, using JWT for security and MongoDB for storage.
-
-![Starships Viewer](https://via.placeholder.com/150)
 
 ## Table of Contents
 
 - [Features](#features)
 - [Technologies Used](#technologies-used)
-- [Installation](#installation)
+- [Running Locally](#running-locally)
 - [Usage](#usage)
 - [Endpoints](#endpoints)
 - [Contributing](#contributing)
 - [License](#license)
+- [Screenshots](#screenshots)
 
 ## Features
 
@@ -93,3 +90,9 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Screenshots
+
+<img width="1507" alt="Screenshot 1" src="https://github.com/user-attachments/assets/bbefff1c-ba9b-4a1e-a82b-a3b8c38881c1">
+
+<img width="1507" alt="Screenshot 2" src="https://github.com/user-attachments/assets/5598b198-1105-4370-9289-e8dd05586c6c">
