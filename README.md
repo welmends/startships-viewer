@@ -52,10 +52,8 @@
 
 4. **Use the default user:**
 
-   ```
-   username: admin
-   password: admin
-   ```
+   - Username: `admin`
+   - Password: `admin`
 
 5. **You can also take a look at the docs:**
 
