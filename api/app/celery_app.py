@@ -20,6 +20,37 @@ celery = Celery(
     backend="redis://localhost:6379/0"
 )
 
+def parse_manufacturers(manufacturer_string, special_names=["Inc", "Inc."]):
+    """
+    Parses a manufacturer string into a list of manufacturer names, handling cases where
+    manufacturers might include commas in their names.
+
+    Args:
+        manufacturer_string (str): A comma-separated string of manufacturer names.
+
+    Returns:
+        list: A list of manufacturer names, with leading and trailing whitespace removed.
+    """
+    # Split the string by commas
+    parts = manufacturer_string.split(",")
+    
+    # Strip leading and trailing whitespace from each part
+    manufacturers = [part.strip() for part in parts if part.strip()]
+    filtered_manufacturers = []
+    for i in range(len(manufacturers)):
+        append = True
+        for s in special_names:
+            if s == manufacturers[i] and len(filtered_manufacturers)>0:
+                if s.endswith('.'):
+                    s = s[:-1]
+                filtered_manufacturers[-1] += f", {s}"
+                append = False
+                continue
+        if append:
+            filtered_manufacturers.append(manufacturers[i])
+    
+    return filtered_manufacturers
+
 @celery.task
 def consume_swapi():
     '''
@@ -40,56 +71,61 @@ def consume_swapi():
         dict: A dictionary with a status key indicating the result of the operation. Possible values are:
             - {"status": "success"} if the operation was successful.
             - {"status": "failed"} if there was an error during the HTTP request.
+            - {"status": "exception"} if there was an unhandled error during the HTTP request.
     '''
-    logger.info('Start consuming swapi..')
-    doc = sync_db.search.find_one({"search": "page"})
-    page = doc["last_page"]
-    model_fields = Starship.__annotations__.keys()
-    
-    while True:
-        # Call SWAPI
-        response = httpx.get(f"{SWAPI_STARSHIPS_BASE_URL}/?page={page}")
-        if response.status_code != 200:
-            return {"status": "failed"}
-        data = response.json()
-        results = data["results"]
-
-        # Create an array of starships
-        valid_data, uids, manufacturers = [], set(), set()
-        for item in results:
-            filtered_item = {key: item.get(key, "unknown") for key in model_fields}
-            uid = int(item.get("url").split('/')[-2])
-            uids.add(uid)
-            filtered_item["uid"] = uid
-            valid_data.append(filtered_item)
-            manufacturers.update([m.strip() for m in filtered_item["manufacturer"].split(",")])
+    try:
+        logger.info('Start consuming swapi..')
+        doc = sync_db.search.find_one({"search": "page"})
+        page = doc["last_page"]
+        model_fields = Starship.__annotations__.keys()
         
-        # Check if any uid already exists in the database
-        existing_uids = sync_db.starships.find({"uid": {"$in": list(uids)}}).distinct("uid")
-        new_data = [doc for doc in valid_data if doc["uid"] not in existing_uids]
+        while True:
+            # Call SWAPI
+            response = httpx.get(f"{SWAPI_STARSHIPS_BASE_URL}/?page={page}")
+            if response.status_code != 200:
+                return {"status": "failed"}
+            data = response.json()
+            results = data["results"]
 
-        # Insert only new documents on starships collection
-        if new_data:
-            sync_db.starships.insert_many(new_data)
+            # Create an array of starships
+            valid_data, uids, manufacturers = [], set(), set()
+            for item in results:
+                filtered_item = {key: item.get(key, "unknown") for key in model_fields}
+                uid = int(item.get("url").split('/')[-2])
+                uids.add(uid)
+                filtered_item["uid"] = uid
+                valid_data.append(filtered_item)
+                manufacturers.update(parse_manufacturers(filtered_item["manufacturer"]))
+            
+            # Check if any uid already exists in the database
+            existing_uids = sync_db.starships.find({"uid": {"$in": list(uids)}}).distinct("uid")
+            new_data = [doc for doc in valid_data if doc["uid"] not in existing_uids]
 
-        # Check if any manufacturer already exists in the database
-        existing_manufacturers = sync_db.manufacturers.find({"name": {"$in": list(manufacturers)}}).distinct("name")
-        manufacturers_data = [{"name": m} for m in manufacturers if m not in existing_manufacturers]
+            # Insert only new documents on starships collection
+            if new_data:
+                sync_db.starships.insert_many(new_data)
 
-        # Insert only new documents on manufacturers collection
-        if manufacturers_data:
-            sync_db.manufacturers.insert_many(manufacturers_data)
+            # Check if any manufacturer already exists in the database
+            existing_manufacturers = sync_db.manufacturers.find({"name": {"$in": list(manufacturers)}}).distinct("name")
+            manufacturers_data = [{"name": m} for m in manufacturers if m not in existing_manufacturers]
 
-        # Check if there is new pages
-        if data.get("next"):
-            page += 1
-        else:
-            sync_db.search.update_one(
-                {"search": "page"},
-                {"$set": {"last_page": page}}
-            )
-            break
-    return {"status": "success"}
+            # Insert only new documents on manufacturers collection
+            if manufacturers_data:
+                sync_db.manufacturers.insert_many(manufacturers_data)
+
+            # Check if there is new pages
+            if data.get("next"):
+                page += 1
+            else:
+                sync_db.search.update_one(
+                    {"search": "page"},
+                    {"$set": {"last_page": page}}
+                )
+                break
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(e)
+        return {"status": "exception"}
 
 @worker_ready.connect
 def at_start(sender, **kwargs):
