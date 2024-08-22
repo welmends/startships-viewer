@@ -1,14 +1,14 @@
 import logging
+import re
 
 import httpx
+from app.constants import SWAPI_STARSHIPS_BASE_URL
+from app.db import sync_db
+from app.models import Starship
 from celery import Celery
 from celery.schedules import crontab
 from celery.signals import worker_ready
 from pydantic import ValidationError
-
-from app.constants import SWAPI_STARSHIPS_BASE_URL
-from app.db import sync_db
-from app.models import Starship
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -18,12 +18,14 @@ logger = logging.getLogger(__name__)
 
 celery = Celery(
     "worker",
-    broker="redis://redis:6379/0", # redis://localhost:6379/0
-    backend="redis://redis:6379/0", # redis://localhost:6379/0
+    broker="redis://redis:6379/0",  # redis://localhost:6379/0
+    backend="redis://redis:6379/0",  # redis://localhost:6379/0
 )
 
 
-def parse_manufacturers(manufacturer_string, special_names=["Inc", "Inc."]):
+def parse_manufacturers(
+    manufacturer_string, special_names=["Inc", "Inc.", "Incorporated"]
+):
     """
     Parses a manufacturer string into a list of manufacturer names, handling cases where
     manufacturers might include commas in their names.
@@ -34,8 +36,8 @@ def parse_manufacturers(manufacturer_string, special_names=["Inc", "Inc."]):
     Returns:
         list: A list of manufacturer names, with leading and trailing whitespace removed.
     """
-    # Split the string by commas
-    parts = manufacturer_string.split(",")
+    # Split the string by commas (',') and slash ('/')
+    parts = re.split(r"[,/]", manufacturer_string)
 
     # Strip leading and trailing whitespace from each part
     manufacturers = [part.strip() for part in parts if part.strip()]
@@ -44,9 +46,6 @@ def parse_manufacturers(manufacturer_string, special_names=["Inc", "Inc."]):
         append = True
         for s in special_names:
             if s == manufacturers[i] and len(filtered_manufacturers) > 0:
-                if s.endswith("."):
-                    s = s[:-1]
-                filtered_manufacturers[-1] += f", {s}"
                 append = False
                 continue
         if append:
