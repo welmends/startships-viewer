@@ -7,6 +7,7 @@
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Running Locally](#running-locally)
+- [Running Tests Locally](#running-tests-locally)
 - [Usage](#usage)
 - [Endpoints](#endpoints)
 - [Contributing](#contributing)
@@ -29,6 +30,7 @@
 - **fastapi-jwt-auth**: Library for JWT authentication.
 - **Celery/Beat/Redis**: Async processing.
 - **MongoDB**: NoSQL database for data storage.
+- **PyTest**: Write tests for Python.
 
 ## Running locally
 
@@ -57,6 +59,27 @@
 5. **You can also take a look at the docs:**
 
    You can also take a look at the docs generated with OpenAPI: http://localhost:8000/docs.
+
+## Running tests locally:
+
+1. Start the mongodb locally:
+
+   ```bash
+   make dev-env
+   ```
+
+2. Create a virtualenv:
+   ```bash
+   cd api/
+   make env
+   . .env/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. Run your tests:
+   ```
+   pytest
+   ```
 
 ## Usage
 
