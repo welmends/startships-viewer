@@ -39,7 +39,7 @@ def consume_swapi():
         valid_data, uids, manufacturers = [], set(), set()
         for item in results:
             filtered_item = {key: item.get(key, "unknown") for key in model_fields}
-            uid = item.get("url").split('/')[-2]
+            uid = int(item.get("url").split('/')[-2])
             uids.add(uid)
             filtered_item["uid"] = uid
             valid_data.append(filtered_item)
