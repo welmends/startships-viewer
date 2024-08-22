@@ -6,8 +6,7 @@ import os
 import logging
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -18,17 +17,18 @@ async_db_client = AsyncIOMotorClient(mongo_uri)
 sync_db = sync_db_client.onedb
 async_db = async_db_client.onedb
 
+
 async def seed_database():
     try:
         existing_collections = await async_db.list_collection_names()
 
         if "starships" not in existing_collections:
             await async_db.create_collection("starships")
-            await async_db.starships.create_index([('uid')], unique=True)
+            await async_db.starships.create_index([("uid")], unique=True)
 
         if "manufacturers" not in existing_collections:
             await async_db.create_collection("manufacturers")
-            await async_db.manufacturers.create_index([('name')], unique=True)
+            await async_db.manufacturers.create_index([("name")], unique=True)
 
         search = async_db["search"]
         if (await search.count_documents({})) == 0:
@@ -36,7 +36,14 @@ async def seed_database():
 
         users = async_db["users"]
         if (await users.count_documents({})) == 0:
-            await users.insert_one({"username": "admin", "password": bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt())})
+            await users.insert_one(
+                {
+                    "username": "admin",
+                    "password": bcrypt.hashpw(
+                        "admin".encode("utf-8"), bcrypt.gensalt()
+                    ),
+                }
+            )
 
         logger.info(f"Seeded collections.")
     except OperationFailure as e:

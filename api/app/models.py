@@ -3,9 +3,11 @@ from pydantic import BaseModel
 
 from app.constants import DEFAULT_SECRET_KEY
 
+
 class User(BaseModel):
     username: str
     password: str
+
 
 class Starship(BaseModel):
     name: str
@@ -21,6 +23,7 @@ class Starship(BaseModel):
     MGLT: str
     cargo_capacity: str
     consumables: str
+
 
 class StarshipQueryParams(BaseModel):
     page: int = 1

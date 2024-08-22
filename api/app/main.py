@@ -11,8 +11,7 @@ from app.config import Settings
 from app.api.routes import router as api_router
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -31,36 +30,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def on_startup():
     from .db import seed_database
+
     await seed_database()
+
 
 @AuthJWT.load_config
 def get_config():
     return Settings()
 
+
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     if exc.status_code == 422:
         return JSONResponse(
-            status_code=401,
-            content={"detail": "Credentials have expired"}
+            status_code=401, content={"detail": "Credentials have expired"}
         )
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
 
 @app.get("/api/ping")
 async def ping(Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        return 'pong', 200
+        return "pong", 200
     except Exception as e:
         raise e
 
+
 app.include_router(api_router, prefix="/api")
+
 
 def custom_openapi():
     if app.openapi_schema:
@@ -75,11 +77,12 @@ def custom_openapi():
             "type": "apiKey",
             "in": "header",
             "name": "Authorization",
-            "description": "Please provide the token with the 'Bearer' prefix. Example: `Bearer your_token_here`"
+            "description": "Please provide the token with the 'Bearer' prefix. Example: `Bearer your_token_here`",
         }
     }
     openapi_schema["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 app.openapi = custom_openapi
