@@ -87,16 +87,16 @@ async def get_starships(page: int = 1, page_size: int = 10, manufacturer: str = 
             filter_regex = re.compile(manufacturer, re.IGNORECASE)
             query_filter = {"manufacturer": filter_regex}
 
-        total = await async_db.starships.count_documents({})
+        total = await async_db.starships.count_documents(query_filter)
         skip = (page - 1) * page_size
         cursor = async_db.starships.find(query_filter, projection={"_id": False}).sort("uid", ASCENDING).skip(skip).limit(page_size)
-        documents = await cursor.to_list(length=page_size)
+        starships = await cursor.to_list(length=page_size)
         return JSONResponse(
             status_code=200,
             content={
-                "next": page + 1 if (page-1)*page_size + len(documents) < total else None,
+                "next": page + 1 if (page-1)*page_size + len(starships) < total else None,
                 "previous": page if page > 1 else None,
-                "results": documents
+                "results": starships
             }
         )
     except Exception as e:
@@ -106,8 +106,7 @@ async def get_starships(page: int = 1, page_size: int = 10, manufacturer: str = 
 async def get_all_manufacturers(Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        # TODO: I have to create a async task to update other database to give this fresh information
-        manufacturers = ['Corellian Engineering Corporation', 'Kuat Drive Yards', 'Sienar Fleet Systems', 'Cyngus Spaceworks']
+        manufacturers = [d["name"] async for d in async_db.manufacturers.find(projection={"_id": False}).sort("name", ASCENDING)]
         return JSONResponse(
             status_code=200,
             content={"results": manufacturers}

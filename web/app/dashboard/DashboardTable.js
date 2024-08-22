@@ -118,8 +118,10 @@ const DashboardTable = ({ bearerToken }) => {
     event.preventDefault();
     if (event.target.value === "All") {
       setSelectedManufacturer(undefined);
+      setPage(1);
     } else {
       setSelectedManufacturer(event.target.value);
+      setPage(1);
     }
   };
 
