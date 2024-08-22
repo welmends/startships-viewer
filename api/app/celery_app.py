@@ -10,12 +10,15 @@ from celery.signals import worker_ready
 from pydantic import ValidationError
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
 
 celery = Celery(
-    "worker", broker="redis://localhost:6379/0", backend="redis://localhost:6379/0"
+    "worker",
+    broker="redis://localhost:6379/0",
+    backend="redis://localhost:6379/0",
 )
 
 

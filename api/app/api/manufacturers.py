@@ -1,9 +1,8 @@
+from app.db import async_db
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pymongo import ASCENDING
-
-from app.db import async_db
 
 router = APIRouter()
 
