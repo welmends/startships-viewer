@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 celery = Celery(
     "worker",
-    broker="redis://localhost:6379/0",
-    backend="redis://localhost:6379/0",
+    broker="redis://redis:6379/0", # redis://localhost:6379/0
+    backend="redis://redis:6379/0", # redis://localhost:6379/0
 )
 
 
