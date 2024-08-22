@@ -36,7 +36,7 @@ async def seed_database():
 
         users = async_db["users"]
         if (await users.count_documents({})) == 0:
-            await search.insert_one({"username": "admin", "password": bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt())})
+            await users.insert_one({"username": "admin", "password": bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt())})
 
         logger.info(f"Seeded collections.")
     except OperationFailure as e:

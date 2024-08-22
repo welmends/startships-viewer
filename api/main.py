@@ -60,9 +60,9 @@ async def on_startup():
 
 @app.post("/api/login")
 async def login(user: User, Authorize: AuthJWT = Depends()):
-    stored_user = [u for u in STORED_USERS if u.get("username") == user.username]
-    if len(stored_user) == 1:
-        if bcrypt.checkpw(user.password.encode('utf-8'), stored_user[0].get("password")):
+    stored_user = await async_db.users.find_one({"username": user.username})
+    if stored_user:
+        if bcrypt.checkpw(user.password.encode('utf-8'), stored_user["password"]):
             access_token = Authorize.create_access_token(subject=user.username)
             return {"access_token": access_token}
     raise HTTPException(status_code=401, detail="Invalid credentials")
