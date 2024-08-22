@@ -5,8 +5,9 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
+from pymongo import ASCENDING
 import bcrypt
-import httpx
+import re
 import logging
 
 from db import seed_database, async_db
@@ -81,30 +82,21 @@ async def get_starships(page: int = 1, page_size: int = 10, manufacturer: str = 
         if page < 1 or page_size < 1:
             raise HTTPException(status_code=400, detail="page and page_size must be a positive integer not equal to zero")
 
-        results, page_previous, page_next = [], -1, None
-        while True:
-            response = httpx.get(f"https://swapi.dev/api/starships/?page={page}")
-            if response.status_code != 200:
-                raise HTTPException(status_code=500, detail="Unknown error")
-            data = response.json()
-            if page_previous == -1:
-                page_previous = data.get('previous')
-            page_next = data.get('next')
-            if data.get('results') == None or data.get('next') == None:
-                break
-            res_results = data.get('results')
-            if manufacturer:
-                res_results = [row for row in res_results if manufacturer in row.get('manufacturer')]
-            results += res_results[:page_size-len(results)]
-            if len(results) == page_size:
-                break
-            page += 1
+        query_filter = {}
+        if manufacturer:
+            filter_regex = re.compile(manufacturer, re.IGNORECASE)
+            query_filter = {"manufacturer": filter_regex}
+
+        total = await async_db.starships.count_documents({})
+        skip = (page - 1) * page_size
+        cursor = async_db.starships.find(query_filter, projection={"_id": False}).sort("uid", ASCENDING).skip(skip).limit(page_size)
+        documents = await cursor.to_list(length=page_size)
         return JSONResponse(
             status_code=200,
             content={
-                "next": page_next,
-                "previous": page_previous,
-                "results": results
+                "next": page + 1 if (page-1)*page_size + len(documents) < total else None,
+                "previous": page if page > 1 else None,
+                "results": documents
             }
         )
     except Exception as e:

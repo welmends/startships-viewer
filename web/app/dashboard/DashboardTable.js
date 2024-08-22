@@ -100,7 +100,6 @@ const DashboardTable = ({ bearerToken }) => {
           }
 
           const manufacturers = await response.json();
-          console.log(manufacturers);
           setManufacturers(manufacturers);
           setError(null);
         } catch (error) {

@@ -6,7 +6,6 @@ DEFAULT_SECRET_KEY = "default_secret_key"
 
 STORED_USERS = [
     {
-        "id": 1,
         "username": "admin",
         "password": bcrypt.hashpw("admin".encode('utf-8'), bcrypt.gensalt()),
     }
