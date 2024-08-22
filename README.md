@@ -120,4 +120,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 <img width="1507" alt="Screenshot 1" src="https://github.com/user-attachments/assets/bbefff1c-ba9b-4a1e-a82b-a3b8c38881c1">
 
-<img width="1507" alt="Screenshot 2" src="https://github.com/user-attachments/assets/5598b198-1105-4370-9289-e8dd05586c6c">
+<img width="1507" alt="Screenshot 2" src="https://github.com/user-attachments/assets/dc063adc-bdee-4339-9a7d-4e2bff329a9f">
+
+https://github.com/user-attachments/assets/0fedabf4-24b5-4bee-b9fb-83aac52156de
+
+
+
