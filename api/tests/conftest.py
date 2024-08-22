@@ -9,7 +9,6 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def mock_auth_jwt(monkeypatch):
     def mock_jwt_required(*args, **kwargs):
-        print(">>>>>>>>>>>>>>")
         pass
 
     monkeypatch.setattr(AuthJWT, "jwt_required", mock_jwt_required)

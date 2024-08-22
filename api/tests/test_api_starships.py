@@ -26,7 +26,7 @@ async def test_get_starships_with_invalid_pagination(mock_auth_jwt):
 
 
 @pytest.mark.asyncio
-async def test_get_starships_success(mock_auth_jwt):
+async def test_get_starships_success(mock_auth_jwt, seed_test_db):
     async with AsyncClient(app=app, base_url="http://test") as ac:
         params = {"page": 1, "page_size": 10}
         headers = {"Authorization": "Bearer your_valid_token"}
