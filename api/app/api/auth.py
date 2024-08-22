@@ -1,10 +1,9 @@
+import bcrypt
+from app.db import async_db
+from app.models import User
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-import bcrypt
-
-from app.db import async_db
-from app.models import User
 
 router = APIRouter()
 

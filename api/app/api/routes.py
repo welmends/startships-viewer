@@ -1,7 +1,7 @@
-from fastapi import APIRouter
 from app.api.auth import router as auth_router
-from app.api.starships import router as starships_router
 from app.api.manufacturers import router as manufacturers_router
+from app.api.starships import router as starships_router
+from fastapi import APIRouter
 
 router = APIRouter()
 

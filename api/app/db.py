@@ -1,9 +1,10 @@
+import logging
+import os
+
+import bcrypt
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
-import bcrypt
-import os
-import logging
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO

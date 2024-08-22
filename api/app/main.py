@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Depends, Request
+import logging
+
+from app.api.routes import router as api_router
+from app.config import Settings
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-import logging
-
-from app.config import Settings
-from app.api.routes import router as api_router
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO

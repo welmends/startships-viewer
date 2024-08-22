@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from app.constants import DEFAULT_SECRET_KEY
+from pydantic import BaseModel
 
 
 class Settings(BaseModel):
