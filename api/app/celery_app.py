@@ -4,9 +4,9 @@ from celery.signals import worker_ready
 import logging
 import httpx
 
-from constants import SWAPI_STARSHIPS_BASE_URL
-from db import sync_db
-from models import Starship
+from app.constants import SWAPI_STARSHIPS_BASE_URL
+from app.db import sync_db
+from app.models import Starship
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
