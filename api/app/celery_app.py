@@ -16,12 +16,31 @@ logger = logging.getLogger(__name__)
 
 celery = Celery(
     "worker",
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/0"
+    broker="redis://localhost:6379/0",
+    backend="redis://localhost:6379/0"
 )
 
 @celery.task
 def consume_swapi():
+    '''
+    Fetches starship data from the SWAPI (Star Wars API) and updates the local database.
+
+    This Celery task performs the following operations:
+    
+    1. Retrieves the current page number to fetch from the `sync_db.search` collection.
+    2. Makes HTTP GET requests to the SWAPI to retrieve starship data.
+    3. Processes the retrieved data, filtering and organizing it into a format compatible with the local database schema.
+    4. Checks for existing records in the `sync_db.starships` and `sync_db.manufacturers` collections and inserts only new records.
+    5. Updates the `sync_db.search` collection with the latest page number if there are no more pages available from SWAPI.
+
+    The function handles pagination by continuously fetching new pages until there are no more pages left.
+    It also ensures that only new starships and manufacturers are added to the database to avoid duplication.
+
+    Returns:
+        dict: A dictionary with a status key indicating the result of the operation. Possible values are:
+            - {"status": "success"} if the operation was successful.
+            - {"status": "failed"} if there was an error during the HTTP request.
+    '''
     logger.info('Start consuming swapi..')
     doc = sync_db.search.find_one({"search": "page"})
     page = doc["last_page"]
@@ -72,15 +91,19 @@ def consume_swapi():
             break
     return {"status": "success"}
 
+@worker_ready.connect
+def at_start(sender, **kwargs):
+    '''
+    Runs the consume_swapi Celery task as soon as we start the Celery worker using the @worker_ready.connect signal.
+    '''
+    celery.send_task("app.celery_app.consume_swapi")
+
+# Celery configurations: Beat schedule and timezone
 celery.conf.beat_schedule = {
     'daily-task': {
         'task': 'app.celery_app.consume_swapi',
-        'schedule': crontab(hour=0, minute=0),
+        'schedule': crontab(hour=0, minute=0), # Runs consume_swapi Celery task once a day
     }
 }
 
 celery.conf.timezone = 'UTC'
-
-@worker_ready.connect
-def at_start(sender, **kwargs):
-    celery.send_task("app.celery_app.consume_swapi")
