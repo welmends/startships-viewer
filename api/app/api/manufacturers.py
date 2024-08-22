@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pymongo import ASCENDING
-from fastapi.responses import JSONResponse
 
 from app.db import async_db
 
@@ -17,4 +17,4 @@ async def get_all_manufacturers(Authorize: AuthJWT = Depends()):
             content={"results": manufacturers}
         )
     except Exception as e:
-        raise e
+        raise HTTPException(status_code=500, detail=str(e))
