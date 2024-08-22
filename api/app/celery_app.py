@@ -74,7 +74,7 @@ def consume_swapi():
 
 celery.conf.beat_schedule = {
     'daily-task': {
-        'task': 'celery_app.consume_swapi',
+        'task': 'app.celery_app.consume_swapi',
         'schedule': crontab(hour=0, minute=0),
     }
 }
@@ -83,4 +83,4 @@ celery.conf.timezone = 'UTC'
 
 @worker_ready.connect
 def at_start(sender, **kwargs):
-    celery.send_task("celery_app.consume_swapi")
+    celery.send_task("app.celery_app.consume_swapi")
