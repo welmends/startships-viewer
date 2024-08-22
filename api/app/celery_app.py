@@ -1,13 +1,14 @@
 import logging
 
 import httpx
-from app.constants import SWAPI_STARSHIPS_BASE_URL
-from app.db import sync_db
-from app.models import Starship
 from celery import Celery
 from celery.schedules import crontab
 from celery.signals import worker_ready
 from pydantic import ValidationError
+
+from app.constants import SWAPI_STARSHIPS_BASE_URL
+from app.db import sync_db
+from app.models import Starship
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

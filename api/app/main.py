@@ -1,14 +1,15 @@
 import logging
 
-from app.api.routes import router as api_router
-from app.config import Settings
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
-from fastapi_jwt_auth.exceptions import AuthJWTException
+from fastapi_jwt_auth.exceptions import AuthJWTException, MissingTokenError
+
+from app.api.routes import router as api_router
+from app.config import Settings
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -45,12 +46,10 @@ def get_config():
 
 
 @app.exception_handler(AuthJWTException)
-def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+async def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     if exc.status_code == 422:
-        return JSONResponse(
-            status_code=401, content={"detail": "Credentials have expired"}
-        )
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+        raise HTTPException(status_code=401, detail="Credentials have expired")
+    return HTTPException(status_code=exc.status_code, content=exc.message)
 
 
 @app.get("/api/ping")
@@ -58,6 +57,8 @@ async def ping(Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
         return "pong", 200
+    except MissingTokenError as e:
+        raise HTTPException(status_code=401, detail="Missing token")
     except Exception as e:
         raise e
 

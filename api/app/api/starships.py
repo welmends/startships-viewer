@@ -1,13 +1,22 @@
+import logging
 import re
 
-from app.db import async_db
-from app.models import StarshipQueryParams
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth.exceptions import MissingTokenError
 from pymongo import ASCENDING
 
+from app.db import async_db
+from app.models import StarshipQueryParams
+
 router = APIRouter()
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
 
 
 @router.get("/starships")
@@ -49,5 +58,10 @@ async def get_starships(
                 "results": starships,
             },
         )
+    except MissingTokenError as e:
+        raise HTTPException(status_code=401, detail="Missing token")
+    except HTTPException as e:
+        raise e
     except Exception as e:
+        logger.exception(e)
         raise HTTPException(status_code=500, detail=str(e))
