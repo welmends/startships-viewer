@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 from app.constants import DEFAULT_SECRET_KEY
@@ -20,3 +21,8 @@ class Starship(BaseModel):
     MGLT: str
     cargo_capacity: str
     consumables: str
+
+class StarshipQueryParams(BaseModel):
+    page: int = 1
+    page_size: int = 10
+    manufacturer: Optional[str] = None
